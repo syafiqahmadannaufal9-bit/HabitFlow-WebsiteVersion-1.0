@@ -461,13 +461,13 @@
                     unit: habitUnit
                 };
 
-                const supabaseId = await addHabitToSupabase(newHabit);
+                const apiId = await addHabitToAPI(newHabit);
 
-                if (supabaseId) {
-                    // Use the Supabase UUID as the habit ID
-                    newHabit.id = supabaseId;
+                if (apiId) {
+                    // Use the API UUID as the habit ID
+                    newHabit.id = apiId;
                 } else {
-                    // Fallback to timestamp ID if Supabase fails
+                    // Fallback to timestamp ID if API fails
                     newHabit.id = Date.now().toString();
                 }
 

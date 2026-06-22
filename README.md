@@ -30,7 +30,7 @@ PEMBANGUNAN APLIKASI HABIT TRACKER
 
 4. CARA MENJALANKAN PROYEK
     - Pastikan MySQL server (XAMPP/WAMP) sudah berjalan.
-    - Buat database `habitflow` dan import dari `server/schema.sql`.
+    - Buat database `web_habit_tracker` dan import dari `server/schema.sql`.
     - Install dependencies backend dengan perintah `npm install`.
     - Sesuaikan konfigurasi koneksi database di file `.env`.
     - Jalankan server backend menggunakan `npm start`.

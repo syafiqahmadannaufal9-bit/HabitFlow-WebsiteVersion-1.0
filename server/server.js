@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the parent directory
 app.use(express.static(path.join(__dirname, '../')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Routes
 const authRoutes = require('./routes/auth');

@@ -516,7 +516,7 @@
                 editingHabit.unit = habitUnit;
 
                 // Update in Supabase using UUID
-                await updateHabitInSupabase(editingHabit.id, editingHabit);
+                await updateHabitInAPI(editingHabit.id, editingHabit);
 
                 // Update localStorage cache
                 const existingHabits = getHabits();

@@ -37,7 +37,13 @@ const apiClient = {
 
         try {
             const response = await fetch(url, config);
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = { error: text || 'Server returned an invalid response' };
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || data.message || 'API request failed');

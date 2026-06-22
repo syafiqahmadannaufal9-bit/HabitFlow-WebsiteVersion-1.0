@@ -259,41 +259,31 @@
             getLoginDate();
 
             // Load dynamic user info
-            if (supabaseClient) {
-                const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-                if (user && !userError) {
-                    const name = user.user_metadata?.full_name || 'User';
+            // Load dynamic user info from API / localStorage
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const name = user.full_name || user.username || 'User';
                     const usernameEl = document.getElementById('dashboard-username');
                     const avatarEl = document.getElementById('dashboard-avatar');
                     
                     if (usernameEl) usernameEl.textContent = name;
                     
-                    // Load avatar dari Supabase profiles table
                     if (avatarEl) {
-                        try {
-                            const { data: profile, error: profileError } = await supabaseClient
-                                .from('profiles')
-                                .select('avatar_url')
-                                .eq('id', user.id)
-                                .single();
-
-                            if (profile?.avatar_url && !profileError) {
-                                avatarEl.src = profile.avatar_url;
-                            } else {
-                                // Fallback ke UI avatars jika belum ada foto
-                                avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10B981&color=fff&bold=true`;
-                            }
-                        } catch (err) {
-                            console.error('Error loading avatar:', err);
-                            // Gunakan default avatar jika ada error
+                        if (user.avatar_url) {
+                            avatarEl.src = user.avatar_url;
+                        } else {
                             avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10B981&color=fff&bold=true`;
                         }
                     }
+                } catch (e) {
+                    console.error('Error parsing user data', e);
                 }
             }
 
-            // Sync habits from Supabase, then render
-            await syncHabitsFromSupabase();
+            // Sync habits from API, then render
+            await syncHabitsFromAPI();
             renderHomeHabits();
             updateShadows(document.documentElement.getAttribute('data-theme') || 'green');
             // Red dots on date slider

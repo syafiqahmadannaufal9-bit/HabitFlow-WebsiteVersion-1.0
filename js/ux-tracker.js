@@ -43,17 +43,6 @@ class UXTracker {
             });
         }
 
-        // 2. Log page visit
-        if (this.sessionId) {
-            const { data } = await window.apiClient.post('/ux/page-visits', {
-                session_id: this.sessionId,
-                user_id: this._getUserId(),
-                page_name: window.location.pathname.split('/').pop() || 'index.html'
-            });
-            if (data && data.visit_id) {
-                this.pageVisitId = data.visit_id;
-            }
-        }
 
         // 3. Track Page Load Time
         window.addEventListener('load', () => {
@@ -139,25 +128,6 @@ class UXTracker {
     }
 
     _flushData() {
-        // Update page visit
-        if (this.pageVisitId && window.apiClient) {
-            const duration = Math.floor((Date.now() - this.enterTime) / 1000);
-            
-            // Note: browser might block async requests on unload, beacon is better in production
-            // We use fetch with keepalive natively in apiClient if possible, 
-            // but for simplicity we just make the call here.
-            fetch(`${API_BASE_URL}/ux/page-visits/${this.pageVisitId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    duration_seconds: duration,
-                    scroll_depth_percent: this.maxScroll,
-                    interactions_count: this.interactions
-                }),
-                keepalive: true
-            });
-        }
-        
         // Push remaining metrics
         if (this.metrics.length > 0) {
             fetch(`${API_BASE_URL}/ux/metrics`, {

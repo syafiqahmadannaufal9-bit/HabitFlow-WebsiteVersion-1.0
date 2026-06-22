@@ -3,8 +3,25 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const path = require('path');
 const pool = require('../db');
 const auth = require('../middleware/auth');
+
+// Setup Multer for Avatar Upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '../public/avatars/'));
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, req.user.id + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+});
 
 // REGISTER
 router.post('/register', async (req, res) => {
@@ -28,7 +45,7 @@ router.post('/register', async (req, res) => {
         res.json({ message: 'User registered successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error: ' + err.message });
     }
 });
 
@@ -75,7 +92,7 @@ router.post('/login', async (req, res) => {
         );
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error: ' + err.message });
     }
 });
 
@@ -87,7 +104,7 @@ router.get('/me', auth, async (req, res) => {
         res.json({ user: users[0] });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error: ' + err.message });
     }
 });
 
@@ -115,7 +132,27 @@ router.put('/profile', auth, async (req, res) => {
         res.json({ message: 'Profile updated' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error: ' + err.message });
+    }
+});
+
+// UPLOAD AVATAR
+router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        
+        // Buat URL yang dapat diakses publik
+        const avatarUrl = 'http://localhost:3000/public/avatars/' + req.file.filename;
+
+        // Update database
+        await pool.query('UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?', [avatarUrl, req.user.id]);
+        
+        res.json({ message: 'Avatar uploaded successfully', avatar_url: avatarUrl });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error: ' + err.message });
     }
 });
 

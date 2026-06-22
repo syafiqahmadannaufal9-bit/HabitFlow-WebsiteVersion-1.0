@@ -40,35 +40,6 @@ router.put('/sessions/:id', async (req, res) => {
     }
 });
 
-// LOG PAGE VISIT
-router.post('/page-visits', async (req, res) => {
-    try {
-        const { session_id, user_id, page_name } = req.body;
-        const [result] = await pool.query(
-            'INSERT INTO ux_page_visits (session_id, user_id, page_name) VALUES (?, ?, ?)',
-            [session_id, user_id || null, page_name]
-        );
-        res.json({ visit_id: result.insertId });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
-
-// UPDATE PAGE VISIT (When leaving)
-router.put('/page-visits/:id', async (req, res) => {
-    try {
-        const { duration_seconds, scroll_depth_percent, interactions_count } = req.body;
-        await pool.query(
-            'UPDATE ux_page_visits SET left_at = NOW(), duration_seconds = ?, scroll_depth_percent = ?, interactions_count = ? WHERE id = ?',
-            [duration_seconds, scroll_depth_percent, interactions_count, req.params.id]
-        );
-        res.json({ message: 'Page visit updated' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
 
 // LOG METRICS
 router.post('/metrics', async (req, res) => {

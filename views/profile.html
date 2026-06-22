@@ -276,15 +276,38 @@
                 document.getElementById('rating-modal-close').onclick = closeModal;
                 
                 // Submit handling
-                document.getElementById('rating-modal-submit').onclick = () => {
+                document.getElementById('rating-modal-submit').onclick = async () => {
                     if (selectedRating === 0) {
                         showToast("Please select a rating", "error");
                         return;
                     }
-                    closeModal();
-                    setTimeout(() => {
-                        showToast("Thank you for your responses!");
-                    }, 300);
+                    
+                    const comment = document.getElementById('rating-feedback').value;
+                    const btn = document.getElementById('rating-modal-submit');
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Submitting...';
+                    
+                    try {
+                        if (window.apiClient) {
+                            const { error } = await window.apiClient.post('/feedback', {
+                                rating: selectedRating,
+                                comment: comment,
+                                source: 'App Profile',
+                                app_version: '1.0'
+                            });
+                            if (error) throw error;
+                        }
+                        
+                        closeModal();
+                        setTimeout(() => {
+                            showToast("Thank you for your responses!");
+                        }, 300);
+                    } catch (err) {
+                        console.error('Feedback error:', err);
+                        showToast("Failed to submit feedback", "error");
+                    } finally {
+                        btn.innerText = originalText;
+                    }
                 };
             }
 
@@ -478,13 +501,16 @@
                 // Update UI first for instant feedback
                 document.getElementById('display-username').innerText = newName;
                 
-                // Persist to Supabase
-                if (supabaseClient && _currentUser) {
-                    await supabaseClient.from('profiles').update({ full_name: newName }).eq('id', _currentUser.id);
-                    await supabaseClient.auth.updateUser({ data: { full_name: newName } });
-                    showToast(`Username updated to ${newName}!`);
-                } else {
-                    showToast(`Username updated to ${newName}!`);
+                // Persist to API
+                if (window.apiClient && _currentUser) {
+                    const { error } = await window.apiClient.put('/auth/profile', { full_name: newName });
+                    if (!error) {
+                        _currentUser.full_name = newName;
+                        localStorage.setItem('currentUser', JSON.stringify(_currentUser));
+                        showToast(`Username updated to ${newName}!`);
+                    } else {
+                        showToast(`Error updating username: ${error}`, 'error');
+                    }
                 }
             } catch (err) {
                 console.error('Update username error:', err);
@@ -501,16 +527,7 @@
             if (!_currentUser) return;
             const email = _currentUser.email;
             if (confirm(`Send a password reset link to ${email}?`)) {
-                try {
-                    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-                    if (error) {
-                        showToast('Error: ' + error.message, 'error');
-                    } else {
-                        showToast('Reset link sent! Please check your email.', 'success');
-                    }
-                } catch (err) {
-                    showToast('Failed to send reset link.', 'error');
-                }
+                showToast('Password reset is not yet supported via local database API.', 'error');
             }
         }
 
@@ -524,9 +541,8 @@
                 return;
             }
 
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (!validTypes.includes(file.type)) {
-                showToast('Unsupported file format. Use JPG, PNG, WEBP, or GIF.', 'error');
+            if (!file.type.startsWith('image/')) {
+                showToast('Unsupported file format. Please upload an image.', 'error');
                 return;
             }
 
@@ -546,32 +562,32 @@
             loadingIndicator.style.opacity = '1';
 
             try {
-                const fileExt = file.name.split('.').pop().toLowerCase();
-                const fileName = `${_currentUser.id}_${Date.now()}.${fileExt}`;
-                const filePath = `public/${fileName}`;
+                const formData = new FormData();
+                formData.append('avatar', file);
 
-                // Upload ke Supabase Storage
-                const { error: uploadError, data } = await supabaseClient.storage
-                    .from('avatars')
-                    .upload(filePath, file, { upsert: true });
+                // Upload via API
+                const token = window.apiClient ? window.apiClient.getToken() : localStorage.getItem('token');
+                const response = await fetch('http://localhost:3000/api/auth/upload-avatar', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Upload failed');
 
-                if (uploadError) throw uploadError;
-
-                // Ambil URL publik
-                const { data: publicData } = supabaseClient.storage
-                    .from('avatars')
-                    .getPublicUrl(filePath);
-
-                const publicUrl = publicData.publicUrl;
+                const publicUrl = result.avatar_url;
 
                 // Tampilkan foto baru langsung di UI
                 profileImg.src = publicUrl;
 
-                // Save URL to profiles table in Supabase
-                await supabaseClient
-                    .from('profiles')
-                    .update({ avatar_url: publicUrl })
-                    .eq('id', _currentUser.id);
+                // Save URL to localStorage
+                if (_currentUser) {
+                    _currentUser.avatar_url = publicUrl;
+                    localStorage.setItem('currentUser', JSON.stringify(_currentUser));
+                }
 
                 showToast('Profile photo successfully updated!', 'success');
 
@@ -600,41 +616,30 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Fetch User Details to display
-            if (supabaseClient) {
-                const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-                if (user && !userError) {
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
                     _currentUser = user;
-                    const name = user.user_metadata?.full_name || 'User';
+                    const name = user.full_name || user.username || 'User';
                     const email = user.email || 'No email';
                     
                     // Update username dan email di UI
                     document.getElementById('display-username').innerText = name;
                     document.getElementById('display-email').innerText = email;
                     
-                    // Cek apakah ada avatar yang sudah disimpan
-                    try {
-                        const { data: profile, error: profileError } = await supabaseClient
-                            .from('profiles')
-                            .select('avatar_url')
-                            .eq('id', user.id)
-                            .single();
-
-                        const profileImg = document.getElementById('profile-img');
-                        
-                        if (profile?.avatar_url && !profileError) {
-                            profileImg.src = profile.avatar_url;
+                    // Profile image fallback
+                    const profileImg = document.getElementById('profile-img');
+                    if (profileImg) {
+                        if (user.avatar_url) {
+                            profileImg.src = user.avatar_url;
                         } else {
-                            // Fallback ke avatar otomatis jika belum ada foto
                             profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10B981&color=fff&bold=true`;
                         }
-                    } catch (profileErr) {
-                        console.error('Error loading profile:', profileErr);
-                        // Gunakan default avatar jika ada error
-                        document.getElementById('profile-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10B981&color=fff&bold=true`;
                     }
 
                     // Show correct auth provider badge
-                    const provider = user.app_metadata?.provider || 'email';
+                    const provider = user.provider || 'email';
                     const badge = document.getElementById('auth-badge');
                     if (badge) {
                         if (provider === 'google') {
@@ -643,8 +648,8 @@
                             badge.innerHTML = '<i class="fa-solid fa-envelope text-sm mt-px"></i> Email Authenticated';
                         }
                     }
-                } else {
-                    console.error('Error getting user:', userError);
+                } catch (e) {
+                    console.error('Error parsing user data', e);
                     showToast('Failed to load profile. Please refresh the page.', 'error');
                 }
             }

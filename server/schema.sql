@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS habitflow;
-USE habitflow;
+-- Import this file into your chosen database (e.g., eb_habit_tracker)
 
 -- 1. users
 CREATE TABLE IF NOT EXISTS users (
@@ -58,19 +57,6 @@ CREATE TABLE IF NOT EXISTS user_experience (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 5. ux_metrics
-CREATE TABLE IF NOT EXISTS ux_metrics (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id CHAR(36),
-    metric_type VARCHAR(50),
-    metric_value DECIMAL(10,2),
-    page_name VARCHAR(100),
-    session_id CHAR(36),
-    device_info VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
 -- 6. ux_sessions
 CREATE TABLE IF NOT EXISTS ux_sessions (
     id CHAR(36) PRIMARY KEY,
@@ -85,17 +71,3 @@ CREATE TABLE IF NOT EXISTS ux_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 7. ux_page_visits
-CREATE TABLE IF NOT EXISTS ux_page_visits (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id CHAR(36),
-    user_id CHAR(36),
-    page_name VARCHAR(100),
-    entered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    left_at TIMESTAMP NULL,
-    duration_seconds INT DEFAULT 0,
-    scroll_depth_percent INT DEFAULT 0,
-    interactions_count INT DEFAULT 0,
-    FOREIGN KEY (session_id) REFERENCES ux_sessions(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);

@@ -156,15 +156,8 @@
             e.preventDefault();
             const email = prompt("Enter your email address to receive a password reset link:");
             if (!email || !email.trim()) return;
-            try {
-                const { error } = await supabaseClient.auth.resetPasswordForEmail(email.trim());
-                if (error) {
-                    showToast('Error: ' + error.message, 'error');
-                } else {
-                    showToast('Password reset link sent! Please check your email.', 'success');
-                }
-            } catch (err) {
-                showToast('Failed to send reset link. Please try again.', 'error');
+            if (email) {
+                alert('Password reset is not yet supported via local database API.');
             }
         }
     </script>

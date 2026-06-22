@@ -132,8 +132,8 @@
             calMonth = now.getMonth();
             calSelectedDay = now.getDate();
 
-            // Sync habits from Supabase before rendering
-            await syncHabitsFromSupabase();
+            // Sync habits from API before rendering
+            await syncHabitsFromAPI();
             renderCalendarFull();
 
             // Month navigation

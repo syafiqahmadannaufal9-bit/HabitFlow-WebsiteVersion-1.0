@@ -363,8 +363,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Sync habits from Supabase before rendering charts
-            await syncHabitsFromSupabase();
+            // Sync habits from API before rendering charts
+            await syncHabitsFromAPI();
             initCharts(currentPeriod);
             
             // Re-render charts when theme changes
