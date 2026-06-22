@@ -328,7 +328,9 @@ async function verifyToken() {
 
 function handleRouteProtection(user) {
     const currentPath = window.location.pathname.toLowerCase();
-    const isPublicRoute = currentPath.includes('login.html') || currentPath.includes('register.html') || currentPath.includes('intro.html');
+    const isAuthRoute = currentPath.includes('login.html') || currentPath.includes('register.html') || currentPath.includes('intro.html');
+    const isPasswordRoute = currentPath.includes('forgot-password.html') || currentPath.includes('reset-password.html');
+    const isPublicRoute = isAuthRoute || isPasswordRoute;
     const isAdminRoute = currentPath.includes('admin_dashboard.html');
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
@@ -343,10 +345,10 @@ function handleRouteProtection(user) {
         // Not logged in and on protected page -> redirect to intro (or login if already seen)
         const introSeen = localStorage.getItem('introSeen') === 'true';
         window.location.href = introSeen ? 'login.html' : 'intro.html';
-    } else if (user && isPublicRoute) {
+    } else if (user && isAuthRoute) {
         // Logged in but on login/register/intro page -> redirect to index
         window.location.href = 'index.html';
-    } else if (isAdmin && isPublicRoute) {
+    } else if (isAdmin && isAuthRoute) {
         // Admin logged in but on login page
         window.location.href = 'admin_dashboard.html';
     }

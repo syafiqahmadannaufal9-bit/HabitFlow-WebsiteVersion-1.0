@@ -524,11 +524,7 @@
         }
 
         async function resetPassword() {
-            if (!_currentUser) return;
-            const email = _currentUser.email;
-            if (confirm(`Send a password reset link to ${email}?`)) {
-                showToast('Password reset is not yet supported via local database API.', 'error');
-            }
+            window.location.href = 'forgot-password.html';
         }
 
         function logout() {

@@ -121,7 +121,6 @@ async function syncHabitsFromAPI() {
         const habits = data.habits;
         const logs = data.logs;
 
-        // Transform to app format and cache in localStorage
         const appHabits = (habits || []).map(h => ({
             id: h.id,
             name: h.name,
@@ -132,6 +131,23 @@ async function syncHabitsFromAPI() {
             evaluation: h.evaluation || 'checklist',
             unit: h.unit || ''
         }));
+
+        // Sync local unsynced habits to the server
+        const localHabits = getHabits();
+        const dbHabitIds = new Set(appHabits.map(h => h.id));
+        
+        for (const localH of localHabits) {
+            // Local unsynced habits have timestamp IDs (no hyphens)
+            if (!dbHabitIds.has(localH.id) && !localH.id.includes('-')) {
+                const newId = await addHabitToAPI(localH);
+                if (newId) {
+                    localH.id = newId;
+                    appHabits.push(localH);
+                } else {
+                    appHabits.push(localH); // keep locally if still fails
+                }
+            }
+        }
 
         saveHabitsCache(appHabits);
 

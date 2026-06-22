@@ -8,6 +8,7 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "mysql2": "^3.22.5",
+    "nodemailer": "^9.0.1",
     "tailwindcss": "^4.2.2",
     "uuid": "^14.0.1"
   },

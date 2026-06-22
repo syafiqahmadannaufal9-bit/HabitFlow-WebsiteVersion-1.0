@@ -5,8 +5,10 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 // Setup Multer for Avatar Upload
 const storage = multer.memoryStorage();
@@ -25,13 +27,12 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'User already exists' });
         }
 
-        const id = uuidv4();
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
         await pool.query(
-            'INSERT INTO users (id, email, password_hash, full_name, username) VALUES (?, ?, ?, ?, ?)',
-            [id, email, password_hash, full_name, username]
+            'INSERT INTO users (email, password_hash, full_name, username) VALUES (?, ?, ?, ?)',
+            [email, password_hash, full_name, username]
         );
 
         res.json({ message: 'User registered successfully' });
@@ -144,6 +145,70 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
         await pool.query('UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?', [avatarUrl, req.user.id]);
         
         res.json({ message: 'Avatar uploaded successfully', avatar_url: avatarUrl });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error: ' + err.message });
+    }
+});
+
+// FORGOT PASSWORD
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'Email not found' });
+        }
+
+        // Create token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        // Token expires in 1 hour
+        const expires = new Date(Date.now() + 3600000); 
+
+        await pool.query(
+            'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE email = ?',
+            [resetToken, expires, email]
+        );
+
+        const emailSent = await sendPasswordResetEmail(email, resetToken);
+        
+        if (emailSent) {
+            res.json({ message: 'Password reset email has been sent' });
+        } else {
+            res.status(500).json({ error: 'Failed to send password reset email' });
+        }
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Server Error: ' + err.message });
+    }
+});
+
+// RESET PASSWORD
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, new_password } = req.body;
+
+        const [users] = await pool.query(
+            'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()', 
+            [token]
+        );
+
+        if (users.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired token' });
+        }
+
+        const user = users[0];
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(new_password, salt);
+
+        // Update password and clear token
+        await pool.query(
+            'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+            [password_hash, user.id]
+        );
+
+        res.json({ message: 'Password successfully reset' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ error: 'Server Error: ' + err.message });
