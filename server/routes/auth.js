@@ -9,15 +9,7 @@ const pool = require('../db');
 const auth = require('../middleware/auth');
 
 // Setup Multer for Avatar Upload
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../public/avatars/'));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, req.user.id + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ 
     storage: storage,
     limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
@@ -143,8 +135,10 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
             return res.status(400).json({ error: 'No file uploaded' });
         }
         
-        // Buat URL yang dapat diakses publik
-        const avatarUrl = 'http://localhost:3000/public/avatars/' + req.file.filename;
+        // Buat base64 string dari buffer file
+        const base64Image = req.file.buffer.toString('base64');
+        const mimeType = req.file.mimetype;
+        const avatarUrl = `data:${mimeType};base64,${base64Image}`;
 
         // Update database
         await pool.query('UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?', [avatarUrl, req.user.id]);

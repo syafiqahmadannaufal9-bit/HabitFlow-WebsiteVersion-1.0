@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100),
     email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255),
-    avatar_url TEXT,
+    avatar_url LONGTEXT,
     provider VARCHAR(20) DEFAULT 'email',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
