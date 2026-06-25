@@ -395,14 +395,13 @@
             let html = '';
             achData.achievements.forEach(ach => {
                 const opacity = ach.isUnlocked ? 'opacity-100' : 'opacity-60 grayscale';
-                const badgeColor = ach.isUnlocked ? 'bg-[var(--primary)]' : 'bg-gray-200';
                 const textColor = ach.isUnlocked ? 'text-gray-900' : 'text-gray-500';
                 const progressPercent = Math.min((ach.progress / ach.target) * 100, 100);
                 
                 const achHTML = `
                     <div class="flex items-center gap-4 p-3 rounded-2xl border border-gray-100 bg-gray-50/50 ${opacity} transition-all">
-                        <div class="w-14 h-14 rounded-full ${badgeColor} theme-bg-update flex items-center justify-center border-2 border-white shadow-sm overflow-hidden flex-shrink-0">
-                            <img src="https://placehold.co/100x100/e2e8f0/e2e8f0.png" alt="Badge" class="w-full h-full object-cover mix-blend-multiply">
+                        <div class="w-14 h-14 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden flex-shrink-0">
+                            <img src="../assets/achievement/${ach.id}.jpeg" alt="${ach.name}" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1">
                             <h4 class="text-sm font-bold ${textColor}">${ach.name}</h4>
