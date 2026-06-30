@@ -323,8 +323,8 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'msg-ai flex gap-3';
             wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                    <i class="fa-solid fa-sparkles"></i>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden border border-emerald-200 p-1">
+                    <img src="../assets/maskot_chatbot.png" alt="Xhabit Bot" class="w-full h-full object-contain">
                 </div>
                 <div class="ai-text">${formatMarkdown(text)}</div>
             `;
@@ -357,8 +357,8 @@
             w.id = 'typing-indicator';
             w.className = 'msg-ai flex gap-3';
             w.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                    <i class="fa-solid fa-sparkles"></i>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden border border-emerald-200 p-1">
+                    <img src="../assets/maskot_chatbot.png" alt="Xhabit Bot" class="w-full h-full object-contain">
                 </div>
                 <div class="dot-typing"><span></span><span></span><span></span></div>
             `;
