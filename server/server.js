@@ -21,12 +21,16 @@ const habitsRoutes = require('./routes/habits');
 const feedbackRoutes = require('./routes/feedback');
 const adminRoutes = require('./routes/admin');
 const uxRoutes = require('./routes/ux'); // For UX metrics
+const aiRoutes = require('./routes/ai');
+const chatbotRoutes = require('./routes/chatbot');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitsRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ux', uxRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Catch-all route to serve the index.html for non-API requests (if SPA-like routing is needed)
 // app.get('*', (req, res) => {

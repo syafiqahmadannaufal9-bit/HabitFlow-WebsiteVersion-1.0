@@ -74,6 +74,23 @@ const apiClient = {
             ...(body && { body: JSON.stringify(body) }), 
             ...options 
         });
+        
+    },
+
+    askAI(prompt, options = {}) {
+        return this.post('/ai/ask', { prompt }, options);
+    },
+
+    getChatHistory(options = {}) {
+        return this.get('/chatbot/history', options);
+    },
+
+    resetChatHistory(options = {}) {
+        return this.delete('/chatbot/history', null, options);
+    },
+
+    sendChatMessage(message, options = {}) {
+        return this.post('/chatbot/send', { message }, options);
     }
 };
 

@@ -48,6 +48,10 @@
                 <i class="fa-solid fa-house text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">Home</span>
             </a>
+            <a href="chatbot.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
+                <i class="fa-solid fa-robot text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">AI Chat</span>
+            </a>
             <a href="calendar.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
                 <i class="fa-regular fa-calendar text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">Calendar</span>
@@ -133,7 +137,7 @@
                     <div class="w-full relative h-40 flex justify-center mb-6">
                         <canvas id="categoryChart"></canvas>
                     </div>
-                    <div id="category-legend" class="w-full flex flex-col gap-3">
+                    <div id="category-legend" class="w-full grid grid-cols-2 gap-x-2 gap-y-3">
                         <!-- Dynamically populated -->
                     </div>
                 </div>
@@ -254,7 +258,7 @@
                 legendContainer.innerHTML = catLabels.map((label, i) => `
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${catColors[i]}"></span>
-                        <span class="text-sm font-medium text-gray-700 truncate">${label}</span>
+                        <span class="text-xs font-medium text-gray-700 truncate" title="${label}">${label}</span>
                     </div>
                 `).join('');
             }

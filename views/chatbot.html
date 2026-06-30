@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+    (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    })();
+    </script>
+    <title>Xhabit Bot - Habit Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/api.js"></script>
+    <script src="../js/ux-tracker.js"></script>
+    <link rel="stylesheet" href="../css/tailwind.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        green: { 500: '#10B981' },
+                        blue: { 500: '#5BA4C9' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Override the main-content-wrapper background for chatbot page */
+        .chatbot-main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(ellipse 80% 50% at 50% 0%, #d1fae5 0%, #ecfdf5 25%, #ffffff 60%);
+        }
+        .dark-mode .chatbot-main {
+            background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(16,185,129,0.12) 0%, rgba(15,23,42,0.9) 40%, #0f172a 70%);
+        }
+
+        /* Chat Bubbles */
+        .msg-ai {
+            align-self: flex-start;
+            max-width: 80%;
+            animation: msgFade 0.35s ease;
+        }
+        .msg-user {
+            align-self: flex-end;
+            max-width: 70%;
+            background: #f3f4f6;
+            color: #1f2937;
+            padding: 12px 18px;
+            border-radius: 20px;
+            border-bottom-right-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            animation: msgFade 0.35s ease;
+        }
+        .dark-mode .msg-user {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        @keyframes msgFade {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI message text styling */
+        .ai-text { font-size: 15px; line-height: 1.7; color: #374151; }
+        .ai-text strong { font-weight: 600; }
+        .dark-mode .ai-text { color: #e2e8f0; }
+
+        /* Typing dots */
+        .dot-typing { display: flex; gap: 5px; padding: 6px 0; }
+        .dot-typing span {
+            width: 7px; height: 7px; background: #9ca3af; border-radius: 50%;
+            animation: dotBounce 1.3s infinite ease-in-out both;
+        }
+        .dot-typing span:nth-child(1) { animation-delay: -0.32s; }
+        .dot-typing span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes dotBounce {
+            0%,80%,100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Input wrapper */
+        .chat-input-bar {
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s;
+        }
+        .chat-input-bar:focus-within {
+            box-shadow: 0 4px 30px rgba(0,0,0,0.13);
+        }
+        .dark-mode .chat-input-bar {
+            background: #1e293b;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.35);
+            border: 1px solid #334155;
+        }
+
+        /* Mic active pulse */
+        @keyframes micPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+            70%  { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+        .mic-active {
+            background: #ef4444 !important;
+            animation: micPulse 1.5s infinite;
+        }
+
+        /* Toolbar buttons */
+        .toolbar-btn {
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+        .dark-mode .toolbar-btn {
+            background: #1e293b;
+            border-color: #334155;
+            color: #94a3b8;
+        }
+        .dark-mode .toolbar-btn:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- Desktop Sidebar -->
+    <aside class="desktop-sidebar">
+        <div class="mb-10 mt-2">
+            <img src="../assets/Logo Xhabit.png" alt="Xhabit Logo" class="w-12 h-12 object-contain rounded-xl">
+        </div>
+        <nav class="flex flex-col gap-4 flex-1 w-full items-center">
+            <a href="index.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </a>
+            <a href="chatbot.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 bg-[#C6F2DE] text-emerald-600 rounded-2xl transition-all shadow-sm">
+                <i class="fa-solid fa-robot text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">AI Chat</span>
+            </a>
+            <a href="calendar.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
+                <i class="fa-regular fa-calendar text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Calendar</span>
+            </a>
+            <a href="statistics.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
+                <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Stats</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-2xl transition-all ">
+                <i class="fa-regular fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </a>
+        </nav>
+        <div class="mb-4">
+            <a href="add_habit.html" class="w-12 h-12 bg-emerald-400 text-white rounded-full flex items-center justify-center text-xl shadow-lg hover:scale-105 hover:bg-emerald-500 transition-all">
+                <i class="fa-solid fa-plus"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="chatbot-main flex flex-col">
+
+        <!-- Greeting (center, shown when no chat) -->
+        <div id="greeting-section" class="flex-1 flex flex-col items-center justify-center px-6 transition-all duration-700">
+            <h1 id="greeting-text" class="text-4xl md:text-5xl font-medium text-gray-700 dark:text-gray-200 tracking-tight mb-6 text-center">
+                Apa berikutnya, <span id="greeting-name" class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-400">Pengguna</span>?
+            </h1>
+            <!-- Quick suggestion pills -->
+            <div class="flex flex-wrap gap-3 justify-center max-w-xl mt-4 mb-8">
+                <button class="suggestion-pill toolbar-btn" data-msg="Berikan tips untuk membangun kebiasaan baru">
+                    <i class="fa-solid fa-lightbulb text-amber-400"></i> Tips kebiasaan baru
+                </button>
+                <button class="suggestion-pill toolbar-btn" data-msg="Bagaimana cara meningkatkan produktivitas harian saya?">
+                    <i class="fa-solid fa-chart-line text-emerald-500"></i> Tingkatkan produktivitas
+                </button>
+                <button class="suggestion-pill toolbar-btn" data-msg="Apa manfaat journaling untuk kesehatan mental?">
+                    <i class="fa-solid fa-book text-blue-400"></i> Manfaat journaling
+                </button>
+                <button class="suggestion-pill toolbar-btn" data-msg="Bantu saya membuat jadwal rutinitas pagi yang efektif">
+                    <i class="fa-solid fa-sun text-orange-400"></i> Rutinitas pagi
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Area (hidden initially, shown when chat starts) -->
+        <div id="chat-section" class="flex-1 overflow-y-auto px-6 pt-8 pb-4 flex flex-col gap-5 max-w-4xl mx-auto w-full hidden">
+            <!-- Toolbar -->
+            <div class="flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-base">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-800 dark:text-gray-200">Xhabit Bot</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-reset" class="toolbar-btn" title="Reset Percakapan">
+                        <i class="fa-solid fa-arrows-rotate"></i> Reset
+                    </button>
+                </div>
+            </div>
+            <!-- Messages container -->
+            <div id="chat-messages" class="flex flex-col gap-5 pb-2">
+                <!-- Messages rendered here -->
+            </div>
+        </div>
+
+        <!-- Input Area (floats in center, moves to bottom on chat) -->
+        <div id="input-area" class="w-full max-w-3xl mx-auto px-6 pb-6 pt-2 transition-all duration-500 flex-shrink-0">
+            <div class="chat-input-bar flex items-center gap-2 px-4 py-3">
+                <button id="btn-mic" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-all text-base flex-shrink-0" title="Voice Input">
+                    <i class="fa-solid fa-microphone" id="mic-icon"></i>
+                </button>
+                <input type="text" id="chat-input" placeholder="Minta Xhabit Bot..." autocomplete="off"
+                    class="flex-1 bg-transparent border-none outline-none text-gray-700 dark:text-gray-200 text-base placeholder-gray-400">
+                <button id="btn-send" class="w-9 h-9 rounded-full flex items-center justify-center text-white bg-emerald-400 hover:bg-emerald-500 active:scale-95 transition-all text-sm flex-shrink-0 opacity-0 pointer-events-none" title="Kirim">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+            <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">Xhabit Bot dapat membuat kesalahan. Periksa kembali informasi penting.</p>
+        </div>
+    </main>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="reset-modal" class="fixed inset-0 bg-gray-900/40 z-[200] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center text-2xl mb-4 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 text-center mb-2">Reset Percakapan?</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-center text-sm mb-6">Semua riwayat chat Anda akan dihapus secara permanen dan tidak bisa dikembalikan.</p>
+            <div class="flex gap-3">
+                <button id="reset-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-colors">Batal</button>
+                <button id="reset-confirm" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-[0_4px_14px_0_rgba(239,68,68,0.39)] transition-colors">Hapus Semua</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+    (function() {
+        // === Elements ===
+        const greetingSection = document.getElementById('greeting-section');
+        const chatSection     = document.getElementById('chat-section');
+        const chatMessages    = document.getElementById('chat-messages');
+        const inputArea       = document.getElementById('input-area');
+        const chatInput       = document.getElementById('chat-input');
+        const btnSend         = document.getElementById('btn-send');
+        const btnMic          = document.getElementById('btn-mic');
+        const micIcon         = document.getElementById('mic-icon');
+        const btnReset        = document.getElementById('btn-reset');
+        const resetModal      = document.getElementById('reset-modal');
+        const resetCancel     = document.getElementById('reset-cancel');
+        const resetConfirm    = document.getElementById('reset-confirm');
+        const greetingName    = document.getElementById('greeting-name');
+
+        let chatActive = false;
+        let isRecording = false;
+        let recognition = null;
+
+        // === Load username from localStorage ===
+        try {
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const name = user.full_name || user.username || 'Pengguna';
+                greetingName.textContent = name;
+            }
+        } catch(e) { /* ignore */ }
+
+        // === Show/hide send button based on input ===
+        chatInput.addEventListener('input', () => {
+            const hasText = chatInput.value.trim().length > 0;
+            btnSend.style.opacity = hasText ? '1' : '0';
+            btnSend.style.pointerEvents = hasText ? 'auto' : 'none';
+        });
+
+        // === Switch to chat mode ===
+        function activateChat() {
+            if (chatActive) return;
+            chatActive = true;
+            greetingSection.style.display = 'none';
+            chatSection.classList.remove('hidden');
+            chatSection.style.display = 'flex';
+        }
+
+        // === Switch back to greeting mode ===
+        function deactivateChat() {
+            chatActive = false;
+            chatMessages.innerHTML = '';
+            greetingSection.style.display = '';
+            chatSection.style.display = 'none';
+            chatSection.classList.add('hidden');
+        }
+
+        // === Add AI bubble ===
+        function addAI(text) {
+            activateChat();
+            const wrapper = document.createElement('div');
+            wrapper.className = 'msg-ai flex gap-3';
+            wrapper.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="ai-text">${formatMarkdown(text)}</div>
+            `;
+            chatMessages.appendChild(wrapper);
+            scrollDown();
+        }
+
+        // === Add user bubble ===
+        function addUser(text) {
+            activateChat();
+            const div = document.createElement('div');
+            div.className = 'msg-user';
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            scrollDown();
+        }
+
+        // === Format basic markdown ===
+        function formatMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code style="background:#e5e7eb;padding:1px 5px;border-radius:4px;font-size:13px;">$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // === Typing indicator ===
+        function showTyping() {
+            const w = document.createElement('div');
+            w.id = 'typing-indicator';
+            w.className = 'msg-ai flex gap-3';
+            w.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="dot-typing"><span></span><span></span><span></span></div>
+            `;
+            chatMessages.appendChild(w);
+            scrollDown();
+        }
+        function removeTyping() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        }
+
+        function scrollDown() {
+            chatSection.scrollTop = chatSection.scrollHeight;
+        }
+
+        // === Load chat history ===
+        async function loadHistory() {
+            try {
+                if (typeof apiClient === 'undefined') return;
+                const res = await apiClient.getChatHistory();
+                if (res.data && res.data.length > 0) {
+                    res.data.forEach(m => {
+                        if (m.sender === 'user') addUser(m.message);
+                        else addAI(m.message);
+                    });
+                }
+            } catch(e) { console.error('History load error', e); }
+        }
+
+        // === Send message ===
+        async function send() {
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+            addUser(msg);
+            chatInput.value = '';
+            btnSend.style.opacity = '0';
+            btnSend.style.pointerEvents = 'none';
+            showTyping();
+            try {
+                if (typeof apiClient === 'undefined') throw new Error('No API');
+                const res = await apiClient.sendChatMessage(msg);
+                removeTyping();
+                const output = (res.data && res.data.output) || 'Maaf, terjadi kesalahan.';
+                addAI(output);
+            } catch(e) {
+                removeTyping();
+                addAI('Maaf, tidak dapat menghubungi AI saat ini.');
+            }
+        }
+
+        btnSend.addEventListener('click', send);
+        chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+        // === Suggestion pills ===
+        document.querySelectorAll('.suggestion-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                chatInput.value = btn.dataset.msg;
+                chatInput.dispatchEvent(new Event('input'));
+                send();
+            });
+        });
+
+        // === Reset conversation ===
+        btnReset.addEventListener('click', () => {
+            resetModal.style.opacity = '1';
+            resetModal.style.pointerEvents = 'auto';
+            resetModal.querySelector('div').style.transform = 'scale(1)';
+        });
+        function closeResetModal() {
+            resetModal.style.opacity = '0';
+            resetModal.style.pointerEvents = 'none';
+            resetModal.querySelector('div').style.transform = 'scale(0.95)';
+        }
+        resetCancel.addEventListener('click', closeResetModal);
+        resetConfirm.addEventListener('click', async () => {
+            closeResetModal();
+            try {
+                await apiClient.resetChatHistory();
+                deactivateChat();
+            } catch(e) {
+                console.error('Failed to reset', e);
+            }
+        });
+
+        // === Microphone (Web Speech API) ===
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'id-ID';
+            recognition.interimResults = true;
+            recognition.continuous = false;
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                chatInput.value = transcript;
+                chatInput.dispatchEvent(new Event('input'));
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                btnMic.classList.remove('mic-active');
+                micIcon.classList.remove('fa-stop');
+                micIcon.classList.add('fa-microphone');
+                // Auto-send if there's content
+                if (chatInput.value.trim()) {
+                    send();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                isRecording = false;
+                btnMic.classList.remove('mic-active');
+                micIcon.classList.remove('fa-stop');
+                micIcon.classList.add('fa-microphone');
+                
+                let errorMsg = 'Terjadi kesalahan pada mikrofon.';
+                if (event.error === 'not-allowed') {
+                    errorMsg = 'Akses mikrofon ditolak. Pastikan Anda mengizinkan akses mikrofon di browser Anda (klik ikon gembok di sebelah URL).';
+                } else if (event.error === 'network') {
+                    errorMsg = 'Kesalahan jaringan. Pastikan Anda terhubung ke internet. (Brave browser mungkin memerlukan pengaturan khusus untuk fitur suara).';
+                } else if (event.error === 'no-speech') {
+                    errorMsg = 'Tidak ada suara yang terdeteksi. Silakan coba lagi.';
+                }
+                alert(errorMsg);
+            };
+
+            btnMic.addEventListener('click', () => {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    isRecording = true;
+                    btnMic.classList.add('mic-active');
+                    micIcon.classList.remove('fa-microphone');
+                    micIcon.classList.add('fa-stop');
+                    recognition.start();
+                }
+            });
+        } else {
+            // Browser doesn't support Speech Recognition
+            btnMic.style.display = 'none';
+        }
+
+        // === Init ===
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    })();
+    </script>
+</body>
+</html>
