@@ -1,26 +1,13 @@
 // API Client is loaded from api.js
 // Initialize theme
 function initTheme() {
-    const isAdminPage = window.location.pathname.toLowerCase().includes('admin_dashboard.html');
-    
-    if (isAdminPage) {
-        // Admin theme handling (defaults to dark)
-        const savedTheme = localStorage.getItem('admin_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: savedTheme } }));
-    } else {
-        // User theme handling (defaults to light, supports dark)
-        let savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'blue' || savedTheme === 'green') {
-            savedTheme = 'light';
-            localStorage.setItem('theme', 'light');
-        }
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        // Apply immediately on load
-        applyThemeToPage(savedTheme);
-        setupBackgroundGradient(savedTheme);
-        document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: savedTheme } }));
-    }
+    const savedTheme = 'light';
+    localStorage.setItem('theme', 'light');
+    localStorage.setItem('admin_theme', 'light');
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    applyThemeToPage(savedTheme);
+    setupBackgroundGradient(savedTheme);
+    document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: savedTheme } }));
 }
 
 // Global dynamic background gradient setup setup
@@ -56,33 +43,7 @@ function setupBackgroundGradient(theme) {
 function updateGradientColor(theme) {
     const bgGradient = document.getElementById('theme-bg-gradient');
     if (bgGradient) {
-         if (theme === 'dark') {
-             bgGradient.style.background = 'linear-gradient(180deg, #111827 0%, rgba(17,24,39,0) 100%)'; 
-         } else if (theme === 'blue') {
-             bgGradient.style.background = 'linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0) 100%)';
-         } else {
-             bgGradient.style.background = 'linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0) 100%)';
-         }
-    }
-}
-
-// Toggle theme between light and dark
-function toggleTheme() {
-    const isAdminPage = window.location.pathname.toLowerCase().includes('admin_dashboard.html');
-    
-    if (isAdminPage) {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('admin_theme', newTheme);
-        document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
-    } else {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        applyThemeToPage(newTheme);
-        document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+         bgGradient.style.background = 'linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0) 100%)';
     }
 }
 
@@ -90,20 +51,10 @@ function toggleTheme() {
 function applyThemeToPage(theme) {
     const mainWrapper = document.querySelector('.main-content-wrapper');
     if (mainWrapper) {
-        if (theme === 'dark') {
-            mainWrapper.style.backgroundColor = '#0F172A';
-        } else {
-            mainWrapper.style.backgroundColor = '';
-        }
+        mainWrapper.style.backgroundColor = '';
     }
 
-    // Toggle body class for the new class-based dark-mode styling
-    if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
-
+    document.body.classList.remove('dark-mode');
     updateGradientColor(theme);
 }
 
