@@ -338,7 +338,7 @@ function buildChecklistCard(habit, completed, delay, dateStr) {
     <div class="habit-card rounded-2xl p-4 flex items-center justify-between text-white shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] ${selRing}" style="animation-delay:${delay}s" data-habit-id="${habit.id}" ${cardClick}>
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 border-2 border-white/80 rounded-full flex items-center justify-center text-xl shrink-0">${habit.iconHtml || '<i class="fa-solid fa-star"></i>'}</div>
-            <div><h3 class="font-bold text-base w-32 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90">${habit.goals || ''}</p></div>
+            <div><h3 class="font-bold text-base w-80 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90">${habit.goals || ''}</p></div>
         </div>
         ${rightArea}
     </div>`;
@@ -367,7 +367,7 @@ function buildNumericCard(habit, completed, delay, dateStr) {
     <div class="habit-card rounded-2xl p-4 flex items-center justify-between text-white shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] ${selRing}" style="animation-delay:${delay}s" data-habit-id="${habit.id}" ${cardClick}>
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 border-2 border-white/80 rounded-full flex items-center justify-center text-xl shrink-0">${habit.iconHtml || '<i class="fa-solid fa-hashtag"></i>'}</div>
-            <div><h3 class="font-bold text-base w-24 sm:w-32 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90">${habit.goals || ''}</p></div>
+            <div><h3 class="font-bold text-base w-80 sm:w-96 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90">${habit.goals || ''}</p></div>
         </div>
         ${rightArea}
     </div>`;
@@ -390,7 +390,7 @@ function buildTimerCard(habit, completed, delay, dateStr) {
     <div class="habit-card rounded-2xl p-4 flex items-center justify-between text-white shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] ${selRing}" style="animation-delay:${delay}s" data-habit-id="${habit.id}" ${cardClick}>
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 border-2 border-white/80 rounded-full flex items-center justify-center text-xl shrink-0">${habit.iconHtml || '<i class="fa-solid fa-stopwatch"></i>'}</div>
-            <div><h3 class="font-bold text-base w-32 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90 timer-display" data-timer-id="${habit.id}">${formatTime(state.elapsed)}</p></div>
+            <div><h3 class="font-bold text-base w-80 sm:w-96 truncate">${habit.name}</h3><p class="text-xs font-medium text-white/90 timer-display" data-timer-id="${habit.id}">${formatTime(state.elapsed)}</p></div>
         </div>
         ${rightArea}
     </div>`;

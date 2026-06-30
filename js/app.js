@@ -96,8 +96,17 @@ function applyThemeToPage(theme) {
             mainWrapper.style.backgroundColor = '';
         }
     }
+
+    // Toggle body class for the new class-based dark-mode styling
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+
     updateGradientColor(theme);
 }
+
 
 // Ripple effect for interactive elements
 function createRipple(event) {
