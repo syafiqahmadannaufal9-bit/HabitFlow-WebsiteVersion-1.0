@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+    (function() {
+        const savedTheme = localStorage.getItem('theme');
+
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    })();
+    </script>
     <title>Profile - Habit Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -306,8 +315,11 @@
             }, 10);
         }
 
+<<<<<<< HEAD
         // === Theme Selector Modal ===
        
+=======
+>>>>>>> 627c03dce3955503097efea45c9ada0374732665
         // === Edit Username Modal System ===
         function showEditUsernameModal(currentUsername) {
             let modal = document.getElementById('edit-username-modal');
