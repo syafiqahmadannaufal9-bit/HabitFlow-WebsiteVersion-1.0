@@ -20,11 +20,17 @@ function saveHabitsCache(habits) {
     localStorage.setItem('habits', JSON.stringify(habits));
 }
 
+// --- Date helper for WIB (UTC+7) ---
+function getWIBDateString(date = new Date()) {
+    const wibTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+    return wibTime.toISOString().slice(0, 10);
+}
+
 // Ensure a "loginDate" is persisted so we know when to start red-dots
 function getLoginDate() {
     let d = localStorage.getItem('loginDate');
     if (!d) {
-        d = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        d = getWIBDateString(); // YYYY-MM-DD
         localStorage.setItem('loginDate', d);
     }
     return d;
@@ -545,17 +551,17 @@ function renderHomeDateRedDots() {
         const dateStr = card.dataset.date;
         if (!dateStr) return;
         // Only for dates >= loginDate and <= today
-        const today = new Date().toISOString().slice(0, 10);
+        const today = getWIBDateString();
         if (dateStr < loginDate || dateStr > today) {
             // Remove dot if exists
             const existingDot = card.querySelector('.red-dot');
             if (existingDot) existingDot.remove();
             return;
         }
-        // Check if all habits completed for this date
-        const allCompleted = habits.every(h => completions[dateStr] && completions[dateStr][h.id]);
+        // Check if any habit completed for this date
+        const anyCompleted = habits.some(h => completions[dateStr] && completions[dateStr][h.id]);
         let dot = card.querySelector('.red-dot');
-        if (!allCompleted) {
+        if (!anyCompleted) {
             if (!dot) {
                 dot = document.createElement('span');
                 dot.className = 'red-dot';
@@ -668,15 +674,15 @@ function renderCalendarRedDots() {
 
     const loginDate = getLoginDate();
     const completions = getCompletions();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getWIBDateString();
 
     document.querySelectorAll('.calendar-day[data-date]').forEach(dayEl => {
         const dateStr = dayEl.dataset.date;
         if (!dateStr || dateStr < loginDate || dateStr > today) return;
 
-        const allCompleted = habits.every(h => completions[dateStr] && completions[dateStr][h.id]);
+        const anyCompleted = habits.some(h => completions[dateStr] && completions[dateStr][h.id]);
         let dot = dayEl.querySelector('.cal-red-dot');
-        if (!allCompleted) {
+        if (!anyCompleted) {
             if (!dot) {
                 dot = document.createElement('span');
                 dot.className = 'cal-red-dot absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full';
@@ -713,7 +719,7 @@ function getStatsData(period) {
         for (let i = 6; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().slice(0, 10);
+            const dateStr = getWIBDateString(d);
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             labels.push(dayNames[d.getDay()]);
 
@@ -733,7 +739,7 @@ function getStatsData(period) {
             for (let d = 0; d < 7; d++) {
                 const day = new Date(today);
                 day.setDate(day.getDate() - (w * 7 + d));
-                const dateStr = day.toISOString().slice(0, 10);
+                const dateStr = getWIBDateString(day);
                 if (habits.length > 0) {
                     const completed = habits.filter(h => completions[dateStr] && completions[dateStr][h.id]).length;
                     totalRate += (completed / habits.length) * 100;
@@ -751,7 +757,7 @@ function getStatsData(period) {
             let dayCount = 0;
             const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
             for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = new Date(monthDate.getFullYear(), monthDate.getMonth(), d).toISOString().slice(0, 10);
+                const dateStr = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 if (habits.length > 0) {
                     const completed = habits.filter(h => completions[dateStr] && completions[dateStr][h.id]).length;
                     totalRate += (completed / habits.length) * 100;
@@ -768,9 +774,9 @@ function getStatsData(period) {
     for (let i = 90; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().slice(0, 10);
-        const allDone = habits.length > 0 && habits.every(h => completions[dateStr] && completions[dateStr][h.id]);
-        if (allDone) {
+        const dateStr = getWIBDateString(d);
+        const hasDoneOne = habits.length > 0 && habits.some(h => completions[dateStr] && completions[dateStr][h.id]);
+        if (hasDoneOne) {
             currentStreak++;
             if (currentStreak > longestStreak) longestStreak = currentStreak;
         } else {
@@ -781,7 +787,7 @@ function getStatsData(period) {
     // Completion rate for today
     let completionRate = 0;
     if (habits.length > 0) {
-        const todayStr = today.toISOString().slice(0, 10);
+        const todayStr = getWIBDateString(today);
         const completed = habits.filter(h => completions[todayStr] && completions[todayStr][h.id]).length;
         completionRate = Math.round((completed / habits.length) * 100);
     }
