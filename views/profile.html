@@ -480,7 +480,7 @@
 
                 // Upload via API
                 const token = window.apiClient ? window.apiClient.getToken() : localStorage.getItem('token');
-                const response = await fetch('http://localhost:3000/api/auth/upload-avatar', {
+                const response = await fetch('https://habitflow-websiteversion-10-production.up.railway.app/api/auth/upload-avatar', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`

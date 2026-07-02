@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://habitflow-websiteversion-10-production.up.railway.app/api';
 
 const apiClient = {
     getToken() {

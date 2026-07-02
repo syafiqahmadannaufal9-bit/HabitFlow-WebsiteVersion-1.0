@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} resetToken - Token reset password
  */
 const sendPasswordResetEmail = async (toEmail, resetToken) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://habitflow-websiteversion-10-production.up.railway.app';
     const resetLink = `${frontendUrl}/views/reset-password.html?token=${resetToken}&email=${encodeURIComponent(toEmail)}`;
 
     const mailOptions = {

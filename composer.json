@@ -1,0 +1,16 @@
+{
+    "name": "suki-man/habit-flow-website-version-1.0",
+    "description": "Website Xhabit",
+    "autoload": {
+        "psr-4": {
+            "SukiMan\\HabitFlowWebsiteVersion10\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SyafiqSuki",
+            "email": "syafiqahmadannaufal9@gmail.com"
+        }
+    ],
+    "require": {}
+}
